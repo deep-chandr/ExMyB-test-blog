@@ -38,7 +38,6 @@ def login(request, *args, **kwargs):
 
 class Logout(generics.RetrieveUpdateAPIView):
 
-
     def put(self, request, *args, **kwargs):
         UserToken.objects.filter(user=request.user, is_valid=False)
         return Response(True)
@@ -77,37 +76,22 @@ class BlogsDetail(generics.RetrieveUpdateAPIView):
     queryset = Blogs.objects.all()
     serializer_class = BlogsSerializer
 
-
-    # def get_queryset(self, *args, **kwargs):
-    #     user = self.request.user
-    #     is_superuser = user.is_superuser
-    #     print('request.user: ', user)
-    #     if is_superuser:
-    #         # return all
-    #         return Blogs.objects.all().order_by('-id')
-    #
-    #     # return filtered
-    #     return Blogs.objects.filter(author_id=user.id).order_by('-id')
-
-    def get_object(self, *args, **kwargs):
-        blog_id = kwargs['blog_id']
-        print('blog_id: ', blog_id)
+    def get_object(self):
+        blog_id = self.kwargs['blog_id']
         return Blogs.objects.get(id=blog_id)
 
-    def get(self, request, *args, **kwargs):
+
+    def put(self, request, blog_id, *args, **kwargs):
         user = check_auth(request)
         if not user:
             return Response('Invalid Authorization. Login to continue')
 
         data = request.data
         blog = self.get_object()
-        # if 'like' in data:
-        #     blog.
+        if 'like' in data:
+            blog.liked_users.add(request.user)
+            blog.save()
 
-
-
-
-        qs = self.get_queryset()
-        return Response(BlogsSerializer(qs, many=True).data)
+        return Response(BlogsSerializer(blog).data)
 
 
